@@ -51,9 +51,11 @@ let rec read_lexeme table seq =
   | '#' :: [%seq let _ = read_comment] :: seq -> read_lexeme table seq
   | ('A'..'Z'|'a'..'z'|'0'..'9'|'_'|'\'' as c) :: seq ->
     Bytes.set stamp 0 c;
-    begin match%seq seq with
-    | [%seq let word = read_word 1] :: _ -> kwd_or_ident table word
-    end
+    (match%seq seq with [%seq let word = read_word 1] :: _ -> kwd_or_ident table word)
+  | ('('|'!'|'$'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|':'|
+     ';'|'<'|'='|'>'|'?'|'@'|'^'|'|'|'~' as c) :: seq ->
+    Bytes.set stamp 0 c;
+    (match%seq seq with [%seq let sym = read_symbol 1] :: _ -> kwd_or_ident table sym)
   | ('0'..'9' as c) :: [%seq let n = read_integer (int_of_char c - 48)] :: _ ->
     Int n
   | '-' :: seq ->
@@ -62,9 +64,7 @@ let rec read_lexeme table seq =
       Int (- n)
     | seq ->
       Bytes.set stamp 0 '-';
-      begin match%seq seq with
-      | [%seq let sym = read_symbol 1] :: _ -> kwd_or_ident table sym
-      end
+      (match%seq seq with [%seq let sym = read_symbol 1] :: _ -> kwd_or_ident table sym)
     end
   | c :: _ ->
     kwd_or_error table c

@@ -29,7 +29,7 @@ The syntax of parsers is the following:
 
 seq-pattern-cont ::= "_"
                    | "[]"
-                   | var
+                   | variable
                    | seq-pattern "::" seq-pattern-cont
 ```
 

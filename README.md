@@ -144,7 +144,7 @@ See the [Demo.](demo/)
 
 The second example above is desugared as follows:
 
-```
+```ocaml
 let rec expr __seq =
   match match __seq () with
         | Seq.Cons (If, __seq) ->

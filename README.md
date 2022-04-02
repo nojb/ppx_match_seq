@@ -5,7 +5,7 @@ Seq.t`. Parsers defined with this syntax are normal functions of type `'a Seq.t
 -> ('b * Seq.t) option`, where `'a` is the type of the elements of the sequence
 and `'b` the type of the result of the parser. Parsers are specified by a
 sequence of cases which are tested in the order they are defined until one of
-them applies (*backtracking*)..
+them applies (backtracking).
 
 Parsers are just syntactic sugar: the syntax is transformed into normal function
 calls and pattern matchings.

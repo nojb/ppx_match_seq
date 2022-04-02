@@ -109,11 +109,67 @@ make top
 ```
 
 This will launch `utop` with the syntax already loaded in it. Try doing for example
+
 ```
-# let f l = match%seq (List.to_seq l) with `A 12 :: _ -> 0 | `A n :: `B m :: _ -> n + m;;
-# f [`A 13; `B 34; `C];;
-# f [`A 12];;
+# let p = function%seq 3 :: 1 :: 4 :: _ -> "hey";;
+# p (List.to_seq [3; 1; 4]);;
+# p (List.to_seq [3; 1; 4; 1; 5; 9]);;
+# p (List.to_seq [1; 1; 4]);;
 ```
+
+or
+
+```
+# type tok = If | Then | Else | Let | In | Equal | Ident of int;;
+# let rec expr = function%seq
+  | If :: [%seq let x = expr] :: Then :: [%seq let y = expr] :: Else :: [%seq let z = expr] :: _ -> "if"
+  | Let :: Ident x :: Equal :: [%seq let x = expr] :: In :: [%seq let y = expr] :: _ -> "let"
+  ;;
+
+;; let rec expr __seq =
+  match match __seq () with
+        | Seq.Cons (If, __seq) ->
+            (match expr __seq with
+             | Some (x, __seq) ->
+                 (match __seq () with
+                  | Seq.Cons (Then, __seq) ->
+                      (match expr __seq with
+                       | Some (y, __seq) ->
+                           (match __seq () with
+                            | Seq.Cons (Else, __seq) ->
+                                (match expr __seq with
+                                 | Some (z, __seq) -> Some ("if", __seq)
+                                 | None -> None)
+                            | _ -> None)
+                       | None -> None)
+                  | _ -> None)
+             | None -> None)
+        | _ -> None
+  with
+  | Some _ as x -> x
+  | None ->
+      (match __seq () with
+       | Seq.Cons (Let, __seq) ->
+           (match __seq () with
+            | Seq.Cons (Ident x, __seq) ->
+                (match __seq () with
+                 | Seq.Cons (Equal, __seq) ->
+                     (match expr __seq with
+                      | Some (x, __seq) ->
+                          (match __seq () with
+                           | Seq.Cons (In, __seq) ->
+                               (match expr __seq with
+                                | Some (y, __seq) -> Some ("let", __seq)
+                                | None -> None)
+                           | _ -> None)
+                      | None -> None)
+                 | _ -> None)
+            | _ -> None)
+       | _ -> None);;
+val expr : tok Seq.t -> (string * (unit -> tok Seq.node)) option = <fun>
+```
+
+
 
 If you want to inspect the generated code, you can use
 ```
@@ -122,4 +178,4 @@ make top-dsource
 
 ### A larger example
 
-See the [Demo](demo/).
+See the [Demo.](demo/)

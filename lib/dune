@@ -1,4 +1,4 @@
 (library
- (name ppx_match_seq)
+ (public_name ppx_match_seq)
  (kind ppx_rewriter)
  (libraries ppxlib))

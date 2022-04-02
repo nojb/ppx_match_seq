@@ -58,13 +58,13 @@ constructor and consist of a sequence of *components*, ending with a final
 component. The possibilities for components other than the final one are as
 follows:
 
-- a single pattern `p`, means: if the sequenece starts with an element which is
+- a single pattern `p`, means: if the sequence starts with an element which is
   matched by this pattern, the component matches, and the remaining sequence is
   matched with the rest of the pattern case.
 
 - an extension node `[%seq let p = e]` where `p` is a pattern of type `'b` and
   `e` is expression of type `'a Seq.t -> ('b * 'a Seq.t) option` means: call the
-  expression (which is a parser) with the current sequecne. If this sub-parser
+  expression (which is a parser) with the current sequence. If this sub-parser
   succeeds, the pattern is bound to its result and the next component is tested.
 
 - an extension node `[%seq p]` where `p` is a pattern, means: the first element
@@ -83,8 +83,8 @@ For the final component, the possibilities are as follows:
   it contains no remaining elements.
 
 - the wildcard `_`, means: the type of the semantic action is `'b`, if the
-  sequence matches this case, the semantic action is evaluted giving some result
-  `e` and the result of the parser is `Some (e, seq)` where `seq` is the
+  sequence matches this case, the semantic action is evaluated giving some
+  result `e` and the result of the parser is `Some (e, seq)` where `seq` is the
   remaining stream.
 
 - a pattern variable `var`, means: the remaining sequence is bound to `var` and
@@ -122,4 +122,4 @@ make top-dsource
 
 ### A larger example
 
-See the [Demo](demo/README.md) in the `demo/` subdirectory.
+See the [Demo](demo/).

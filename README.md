@@ -46,8 +46,8 @@ action* (the expressions on the right of the arrows `->`) is evaluated.
 
 ### Semantics
 
-A parser (as defined by the "parser" rule above) is a function `'a Seq.t -> ('b
-* 'a Seq.t) option` where `'a` is the type of the elements of the input sequence
+A parser (as defined by the `parser` rule above) is a function `'a Seq.t -> ('b * 'a Seq.t) option`
+where `'a` is the type of the elements of the input sequence
 and `'b` is the type of the result of the parser.
 
 The parser is defined by a sequence of "parser-cases". These are tested in in

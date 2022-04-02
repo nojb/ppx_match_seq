@@ -1,17 +1,18 @@
 ## `ppx_match_seq`
 
-We describe here the syntax and the semantics of the parsers of sequences (`'a
-Seq.t`). Parser defined with the syntax `%seq` used here are normal functions of
-type `'a Seq.t -> ('b * Seq.t) option`, where `'a` is the type of the elements
-of the sequence and `'b` the type of the result of the parser. The parser cases
-are tested in the order they are defined until one of them applies.
+We describe the syntax and the semantics of the parsers of sequences `'a
+Seq.t`. Parsers defined with this syntax are normal functions of type `'a Seq.t
+-> ('b * Seq.t) option`, where `'a` is the type of the elements of the sequence
+and `'b` the type of the result of the parser. Parsers are specified by a
+sequence of cases which are tested in the order they are defined until one of
+them applies (*backtracking*)..
 
-Parsers are just syntactic sugar: the PPX transforms parsers specified using the
-syntax into normal function calls and pattern matchings.
+Parsers are just syntactic sugar: the syntax is transformed into normal function
+calls and pattern matchings.
 
 ### Syntax
 
-The syntax of parsers, when using the `ppx_match_seq` ppx preprocessor, is the following:
+The syntax of parsers is the following:
 
 ```
           parser ::= "function%seq" parser-cases
@@ -20,8 +21,7 @@ The syntax of parsers, when using the `ppx_match_seq` ppx preprocessor, is the f
     parser-cases ::= parser-cases parser-case
                    | <nothing>
 
-     parser-case ::= seq-pattern "::" seq-pattern-cont "->" expression
-                   | seq-pattern-cont "->" expression
+     parser-case ::= seq-pattern-cont "->" expression
 
      seq-pattern ::= pattern
                    | "[%seq" "let" pattern "=" expression "]"
@@ -33,8 +33,16 @@ seq-pattern-cont ::= "_"
                    | seq-pattern "::" seq-pattern-cont
 ```
 
-The expressions appearing on the right of the `"->"` symbols will be called
-*semantic actions*.
+The relation between `match%seq` and `function%seq` is the same as that between
+`match` and `function`.
+
+A parser consist of a sequence of cases `parser-case`. Each case consist of a
+sequence of components `seq-pattern`. Each component other than the final one
+matches an element of the sequence, in order. The final component is special as
+it "matches" the rest of the sequence (see semantics below).
+
+If a sequence matches one whole pattern case, then the associated *semantic
+action* (the expressions on the right of the arrows `->`) is evaluated.
 
 ### Semantics
 

@@ -47,30 +47,35 @@ let expand_case p e =
   | _ ->
     expand_pattern p e
 
-let rec expand_case0 p e =
-  match p.ppat_desc with
-  | Ppat_construct ({txt = Lident "::"; loc = _}, Some ([], {ppat_desc = Ppat_tuple [p1; p2]; _})) ->
-    expand_case p1 (expand_case0 p2 e)
-  | Ppat_any ->
-    e
-  | Ppat_construct ({txt = Lident "[]"; loc = _}, None) ->
-    A.pexp_match ~loc (A.eapply ~loc (A.evar ~loc __seq) [A.eunit ~loc])
-      [
-        A.case ~lhs:(pnil ~loc) ~guard:None ~rhs:e;
-        A.case ~lhs:(A.ppat_any ~loc) ~guard:None ~rhs:enone;
-      ]
-  | Ppat_var _ ->
-    A.pexp_let ~loc Nonrecursive [A.value_binding ~loc ~pat:p ~expr:(A.evar ~loc __seq)] e
-  | _ ->
-    assert false
+let expand_case0 p e =
+  let e' = esome (A.pexp_tuple ~loc [e; A.evar ~loc __seq]) in
+  let rec aux p =
+    match p.ppat_desc with
+    | Ppat_construct ({txt = Lident "::"; loc = _}, Some ([], {ppat_desc = Ppat_tuple [p1; p2]; _})) ->
+      expand_case p1 (aux p2)
+    | Ppat_any ->
+      e'
+    | Ppat_construct ({txt = Lident "[]"; loc = _}, None) ->
+      A.pexp_match ~loc (A.eapply ~loc (A.evar ~loc __seq) [A.eunit ~loc])
+        [
+          A.case ~lhs:(pnil ~loc) ~guard:None ~rhs:e';
+          A.case ~lhs:(A.ppat_any ~loc) ~guard:None ~rhs:enone;
+        ]
+    | Ppat_var _ ->
+      A.pexp_let ~loc Nonrecursive [A.value_binding ~loc ~pat:p ~expr:(A.evar ~loc __seq)] e
+    | _ ->
+      assert false
+  in
+  aux p
 
 let expand_case0 {pc_lhs; pc_guard = _; pc_rhs} =
-  let pc_rhs = esome (A.pexp_tuple ~loc [pc_rhs; A.evar ~loc __seq]) in
   expand_case0 pc_lhs pc_rhs
 
 let rec expand_cases = function
-  | [] -> assert false
-  | [case] -> expand_case0 case
+  | [] ->
+    assert false
+  | case :: [] ->
+    expand_case0 case
   | case :: cases ->
     A.pexp_match ~loc (expand_case0 case)
       [

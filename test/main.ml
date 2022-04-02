@@ -48,29 +48,35 @@ let kwd_or_error keyword_table char =
 let rec read_lexeme table seq =
   match%seq seq with
   | ('(' | '\n' | '\r' | '\t') :: seq -> read_lexeme table seq
-  | '#' :: _ -> read_comment seq; read_lexeme table seq
+  | '#' :: [%seq let _ = read_comment] :: seq -> read_lexeme table seq
   | ('A'..'Z'|'a'..'z'|'0'..'9'|'_'|'\'' as c) :: seq ->
     Bytes.set stamp 0 c;
-    kwd_or_ident table (read_word 1 seq)
-  | ('0'..'9' as c) :: _ ->
-    Int (read_integer (int_of_char c - 48) seq)
+    begin match%seq seq with
+    | [%seq let word = read_word 1] :: _ -> kwd_or_ident table word
+    end
+  | ('0'..'9' as c) :: [%seq let n = read_integer (int_of_char c - 48)] :: _ ->
+    Int n
   | '-' :: seq ->
     begin match%seq seq with
-    | ('0'..'9' as c) :: seq -> Int (- (read_integer (int_of_char c - 48) seq))
-    | _ ->
+    | ('0'..'9' as c) :: [%seq let n = read_integer (int_of_char c - 48)] :: _ ->
+      Int (- n)
+    | seq ->
       Bytes.set stamp 0 '-';
-      kwd_or_ident table (read_symbol 1 seq)
+      begin match%seq seq with
+      | [%seq let sym = read_symbol 1] :: _ -> kwd_or_ident table sym
+      end
     end
   | c :: _ ->
     kwd_or_error table c
 
-let lexer table seq =
-  Seq.unfold (fun () ->
-      match%seq seq with
-      | [%seq let lexeme = read_lexeme table] :: seq -> Some (lexeme, seq)
-      | [] -> None
-      | _ -> raise Parse_error
-    )
+let rec lexer table seq () =
+  match seq () with
+  | Seq.Nil -> Seq.Nil
+  | Seq.Cons _ ->
+    begin match read_lexeme table seq with
+    | None -> raise Parse_error
+    | Some (x, seq) -> Seq.Cons (x, lexer table seq)
+    end
 
 let build_lexer keywords =
   let keyword_table = Hashtbl.create 17 in
@@ -124,14 +130,18 @@ let read_proposition seq =
   | None -> raise Parse_error
   | Some (p, _) -> p
 
-let example1 = (* not (not P) <=> P *)
-  [Kwd "not"; Kwd "("; Kwd "not"; Ident "P"; Kwd ")"; Kwd "<=>"; Ident "P"]
+let lexer =
+  build_lexer ["true"; "false"; "("; ")"; "not"; "and"; "or"; "=>"; "<=>"]
 
-let example2 = (* P or (not P) <=> true *)
-  [Ident "P"; Kwd "or"; Kwd "("; Kwd "not"; Ident "P"; Kwd ")"; Kwd "<=>"; Kwd "true"]
+let parse_proposition str =
+  read_proposition (lexer (String.to_seq str))
+
+let example1 = "not (not P) <=> P"
+
+let example2 = "P or (not P) <=> true"
 
 let examples =
   [example1; example2 ]
 
 let _ =
-  List.map (fun ex -> read_proposition (List.to_seq ex)) examples
+  List.map parse_proposition examples

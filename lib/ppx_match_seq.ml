@@ -32,7 +32,6 @@ let expand_pattern p ?guard e =
       A.case ~lhs:(A.ppat_any ~loc) ~guard:None ~rhs:enone;
     ]
 
-(* shoudl expand to an expression of type a seq -> (b * seq) option *)
 let expand_case p e =
   match p.ppat_desc with
   | Ppat_extension
@@ -60,8 +59,10 @@ let rec expand_case0 p e =
         A.case ~lhs:(pnil ~loc) ~guard:None ~rhs:e;
         A.case ~lhs:(A.ppat_any ~loc) ~guard:None ~rhs:enone;
       ]
-  | _ ->
+  | Ppat_var _ ->
     A.pexp_let ~loc Nonrecursive [A.value_binding ~loc ~pat:p ~expr:(A.evar ~loc __seq)] e
+  | _ ->
+    assert false
 
 let expand_case0 {pc_lhs; pc_guard = _; pc_rhs} =
   let pc_rhs = esome (A.pexp_tuple ~loc [pc_rhs; A.evar ~loc __seq]) in

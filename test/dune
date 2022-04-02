@@ -1,3 +1,4 @@
 (executable
  (name main)
+ (flags -warn-error -a)
  (preprocess (pps ppx_match_seq)))

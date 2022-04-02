@@ -122,4 +122,4 @@ make top-dsource
 
 ### A larger example
 
-See the [demo](demo/README.md).
+See the [Demo](demo/README.md) in the `demo/` subdirectory.

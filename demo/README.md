@@ -1,8 +1,8 @@
 ## Demo
 
-Here you will find an example ported from *Le langage Caml*, written by Pierre
-Weiss and Xavier Leroy. Namely this folder contains a port of the parsing part
-of chapter 12 (sections 12.5 and 12.8).
+Here you will find a larger example ported from *Le langage Caml*, written by
+Pierre Weiss and Xavier Leroy. Namely this folder contains the parsing part of
+chapter 12 (sections 12.5 and 12.8).
 
 - `lexuniv.ml` contains the "universal lexer generator", roughly similar to
   `Genlex` in spirit.

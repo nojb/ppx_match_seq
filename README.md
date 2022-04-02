@@ -112,9 +112,13 @@ This will launch `utop` with the syntax already loaded in it. Try doing for exam
 
 ```
 # let p = function%seq 3 :: 1 :: 4 :: _ -> "hey";;
+val p : (unit -> int Seq.node) -> (string * int Seq.t) option = <fun>
 # p (List.to_seq [3; 1; 4]);;
+- : (string * int Seq.t) option = Some ("hey", <fun>)
 # p (List.to_seq [3; 1; 4; 1; 5; 9]);;
+- : (string * int Seq.t) option = Some ("hey", <fun>)
 # p (List.to_seq [1; 1; 4]);;
+- : (string * int Seq.t) option = None
 ```
 
 or
@@ -122,11 +126,26 @@ or
 ```
 # type tok = If | Then | Else | Let | In | Equal | Ident of int;;
 # let rec expr = function%seq
-  | If :: [%seq let x = expr] :: Then :: [%seq let y = expr] :: Else :: [%seq let z = expr] :: _ -> "if"
-  | Let :: Ident x :: Equal :: [%seq let x = expr] :: In :: [%seq let y = expr] :: _ -> "let"
-  ;;
+    | If :: [%seq let x = expr] :: Then :: [%seq let y = expr] :: Else :: [%seq let z = expr] :: _ -> "if"
+    | Let :: Ident x :: Equal :: [%seq let x = expr] :: In :: [%seq let y = expr] :: _ -> "let";;
+val expr : tok Seq.t -> (string * (unit -> tok Seq.node)) option = <fun>
+```
 
-;; let rec expr __seq =
+If you want to inspect the generated code, you can use
+```
+make top-dsource
+```
+
+### A larger example
+
+See the [Demo.](demo/)
+
+### The rewriting
+
+The second example above is desugared as follows:
+
+```
+let rec expr __seq =
   match match __seq () with
         | Seq.Cons (If, __seq) ->
             (match expr __seq with
@@ -166,16 +185,4 @@ or
                  | _ -> None)
             | _ -> None)
        | _ -> None);;
-val expr : tok Seq.t -> (string * (unit -> tok Seq.node)) option = <fun>
 ```
-
-
-
-If you want to inspect the generated code, you can use
-```
-make top-dsource
-```
-
-### A larger example
-
-See the [Demo.](demo/)

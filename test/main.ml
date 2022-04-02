@@ -136,12 +136,24 @@ let lexer =
 let parse_proposition str =
   read_proposition (lexer (String.to_seq str))
 
-let example1 = "not (not P) <=> P"
-
-let example2 = "P or (not P) <=> true"
-
 let examples =
-  [example1; example2 ]
+  [
+    "not (not P) <=> P";
+    "P or (not P) <=> true";
+    "P and (not P) <=> false";
+    "(P <=> true) <=> P";
+    "(P <=> false) <=> not P";
+    "P or (not P)";
+    "not (P and (not P))";
+    "P or P <=> P";
+    "P and P <=> P";
+    "P => P";
+    "P <=> P";
+    "(P <=> Q) <=> (Q <=> P)";
+    "(not P <=> not Q) <=> (P <=> Q)";
+    "(P => Q) <=> (not Q => not P)";
+    "(P and not Q) => not (P and Q)";
+  ]
 
 let _ =
   List.map parse_proposition examples

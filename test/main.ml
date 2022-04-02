@@ -47,7 +47,7 @@ let kwd_or_error keyword_table char =
 
 let rec read_lexeme table seq =
   match%seq seq with
-  | ('(' | '\n' | '\r' | '\t') :: seq -> read_lexeme table seq
+  | (' ' | '\n' | '\r' | '\t') :: seq -> read_lexeme table seq
   | '#' :: [%seq let _ = read_comment] :: seq -> read_lexeme table seq
   | ('A'..'Z'|'a'..'z'|'0'..'9'|'_'|'\'' as c) :: seq ->
     Bytes.set stamp 0 c;

@@ -1,4 +1,7 @@
 (executable
- (name main)
- (flags -warn-error -a)
+ (name demo)
  (preprocess (pps ppx_match_seq)))
+
+(rule
+ (alias runtest)
+ (action (run ./demo.exe)))

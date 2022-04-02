@@ -93,3 +93,33 @@ For the final component, the possibilities are as follows:
 
 Notice that patterns are bound immediately and can be used in the next pattern
 component.
+
+### Quickstart
+
+**Requirements**
+
+- `dune`
+- `ppxlib`
+- `utop` (optional)
+
+To play with the syntax, use
+
+```
+make top
+```
+
+This will launch `utop` with the syntax already loaded in it. Try doing for example
+```
+# let f l = match%seq (List.to_seq l) with `A 12 :: _ -> 0 | `A n :: `B m :: _ -> n + m;;
+# f [`A 13; `B 34; `C];;
+# f [`A 12];;
+```
+
+If you want to inspect the generated code, you can use
+```
+make top-dsource
+```
+
+### A larger example
+
+See the [demo](demo/README.md).

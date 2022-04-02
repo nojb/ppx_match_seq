@@ -8,7 +8,7 @@ test:
 
 .PHONY: top
 top:
-	dune utop lib -- -require ppx_match_seq
+	dune utop lib -- -require ppx_match_seq # -dsource
 
 .PHONY: clean
 clean:

@@ -110,7 +110,7 @@ make top
 
 This will launch `utop` with the syntax already loaded in it. Try doing for example
 
-```
+```ocaml
 # let p = function%seq 3 :: 1 :: 4 :: _ -> "hey";;
 val p : (unit -> int Seq.node) -> (string * int Seq.t) option = <fun>
 # p (List.to_seq [3; 1; 4]);;
@@ -123,7 +123,7 @@ val p : (unit -> int Seq.node) -> (string * int Seq.t) option = <fun>
 
 or
 
-```
+```ocaml
 # type tok = If | Then | Else | Let | In | Equal | Ident of int;;
 # let rec expr = function%seq
     | If :: [%seq let x = expr] :: Then :: [%seq let y = expr] :: Else :: [%seq let z = expr] :: _ -> "if"

@@ -2,6 +2,7 @@
 
 type tok = A of int | B | C
 
-let rec expr = function%seq
-  | A n, [%seq? (B, C)] -> n
+let rec expr = fun seq ->
+  match%seq seq with
+  | A n :: [%seq? B when false] -> n
   | [%seq let x = expr] -> x

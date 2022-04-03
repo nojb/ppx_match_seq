@@ -8,8 +8,8 @@ let merge_loc loc1 loc2 =
   let loc_ghost = loc1.loc_ghost || loc2.loc_ghost in
   {Location.loc_start; loc_end; loc_ghost}
 
-let loc_of_case {pc_lhs; pc_guard = _; pc_rhs} =
-  merge_loc pc_lhs.ppat_loc pc_rhs.pexp_loc
+let loc_of_case (p, e) =
+  merge_loc p.ppat_loc e.pexp_loc
 
 let mkghost loc =
   {loc with Location.loc_ghost = true}
@@ -57,7 +57,7 @@ let expand_case p e =
   | _ ->
     expand_pattern p e
 
-let expand_case0 p e =
+let expand_case0 (p, e) =
   let e' =
     let loc = mkghost e.pexp_loc in
     esome ~loc (A.pexp_tuple ~loc [e; A.evar ~loc __seq])
@@ -83,14 +83,6 @@ let expand_case0 p e =
   in
   aux p
 
-let expand_case0 {pc_lhs; pc_guard; pc_rhs} =
-  begin match pc_guard with
-  | None -> ()
-  | Some {pexp_loc = loc; _} ->
-    Location.raise_errorf ~loc "Top-level guards are not allowed."
-  end;
-  expand_case0 pc_lhs pc_rhs
-
 let rec expand_cases = function
   | [] ->
     assert false
@@ -98,32 +90,49 @@ let rec expand_cases = function
     expand_case0 case
   | case :: cases ->
     let case_ok =
-      let dummy_var = "__x" in
+      let __x = "__x" in
       let lhs =
         let loc = loc_none in
-        A.ppat_alias ~loc (psome ~loc (A.ppat_any ~loc)) (Loc.make ~loc dummy_var)
+        A.ppat_alias ~loc (psome ~loc (A.ppat_any ~loc)) (Loc.make ~loc __x)
       in
-      let rhs = A.evar ~loc:loc_none dummy_var in
+      let rhs = A.evar ~loc:loc_none __x in
       A.case ~lhs ~guard:None ~rhs
     in
     let case_fail = A.case ~lhs:(pnone ~loc:loc_none) ~guard:None ~rhs:(expand_cases cases) in
     let loc = List.fold_left (fun loc case -> merge_loc loc (loc_of_case case)) (loc_of_case case) cases in
     A.pexp_match ~loc (expand_case0 case) [case_ok; case_fail]
 
-let expand ~ctxt:_ e =
-  match e.pexp_desc with
-  | Pexp_function cases ->
-    A.eabstract ~loc:e.pexp_loc [A.pvar ~loc:loc_none __seq]
+type payload =
+  | Function of (pattern * expression) list
+  | Match of expression * (pattern * expression) list
+
+let expand ~ctxt:_ = function
+  | Function cases ->
+    A.eabstract ~loc:loc_none [A.pvar ~loc:loc_none __seq]
       (expand_cases cases)
-  | Pexp_match (e, cases) ->
+  | Match (e, cases) ->
     A.pexp_let ~loc:e.pexp_loc Nonrecursive [A.value_binding ~loc:e.pexp_loc ~pat:(A.pvar ~loc:loc_none __seq) ~expr:e]
       (expand_cases cases)
-  | _ ->
-    Location.raise_errorf ~loc:e.pexp_loc "Invalid payload."
+
+(* Ast_pattern.many is buggy, see: https://github.com/ocaml-ppx/ppxlib/issues/331 *)
+let many t =
+  let f ctx loc x k =
+    let t = Ast_pattern.to_func t ctx loc in
+    let rec aux accu = function
+      | [] -> k (List.rev accu)
+      | x :: xs ->
+        t x (fun x -> aux (x :: accu) xs)
+    in
+    aux [] x
+  in
+  Ast_pattern.of_func f
 
 let ppx_match_seq =
+  let pattern_cases = many Ast_pattern.(pack2 (case ~lhs:__ ~guard:none ~rhs:__)) in
   Extension.V3.declare "seq" Extension.Context.expression
-    Ast_pattern.(single_expr_payload __)
+    Ast_pattern.(single_expr_payload
+                   (alt (map1 ~f:(fun cases -> Function cases) (pexp_function pattern_cases))
+                      (map2 ~f:(fun e cases -> Match (e, cases)) (pexp_match __ pattern_cases))))
     expand
 
 let rule =

@@ -25,7 +25,9 @@ The syntax of parsers is the following:
 
      seq-pattern ::= pattern
                    | "[%seq" "let" pattern "=" expression "]"
-                   | "[%seq?" pattern ["when" expression] "]"
+                   | "[%seq?" pattern "]"
+                   | "[%seq?" pattern "when" expression] "]"
+                   | "[%seq" expression "]"
 
 seq-pattern-cont ::= "_"
                    | "[]"
@@ -76,6 +78,10 @@ follows:
   against `p`; if it matches *and* `e` evalues to `true`, then the whole
   component matches and the remaining components are tested against the rest of
   the sequence.
+
+- an extension node `[%seq e]` where `e` is an expression of type `unit`, means:
+  the expression is evaluated for its side-effects, and the remaining components
+  are tested against the current sequence (without consuming any element).
 
 For the final component, the possibilities are as follows:
 

@@ -68,35 +68,53 @@ follows:
   succeeds, the pattern is bound to its result and the next component is tested.
 
 - an extension node `[%seq p]` where `p` is a pattern, means: the first element
-  of the sequence is matched against `p` and if it succeeds, the next component
-  is tested.
+  of the sequence is matched against `p` and if it succeeds, the remaining
+  components are tested against the rest of the sequence.
 
 - an extension node `[%seq p when e]` where `p` is a pattern and `e` is an
   expression of type `bool`, means: the first element of the sequence is matched
-  against `p`; if it matches and `e` evalues to `true`, then the whole component
-  matches and the rest of the sequence is tested against the remaining
-  components.
+  against `p`; if it matches *and* `e` evalues to `true`, then the whole
+  component matches and the remaining components are tested against the rest of
+  the sequence.
 
 For the final component, the possibilities are as follows:
 
 - the empty list constructor, `[]`, which means: the current sequence matches if
   it contains no remaining elements.
 
-- the wildcard `_`, means: the type of the semantic action is `'b`, if the
+- the wildcard `_`, means: the type of the semantic action is `'b` and if the
   sequence matches this case, the semantic action is evaluated giving some
   result `e` and the result of the parser is `Some (e, seq)` where `seq` is the
-  remaining stream.
+  rest of the sequence.
 
-- a pattern variable `var`, means: the remaining sequence is bound to `var` and
-  the type of the semantic action is `('b * 'a Seq.t) option`, and its result is
-  also the result of the whole parser.
+- a pattern variable `v`, means: the rest of the sequence is bound to `v` (of
+  type `'a Seq.t`) and the type of the semantic action is `('b * 'a Seq.t)
+  option`. The semantic action is evaluated and its result is also the result of
+  the parser.
 
-Notice that patterns are bound immediately and can be used in the next pattern
-component.
+Notice that patterns in one component are bound immediately and can be used in
+the following pattern components.
+
+### Comparison with classical `Stream` parsers
+
+The main differences are:
+
+- Stream parsers were imperative (elements once consumed from the input stream
+  were no longer available). In particular, classical parsers did not support
+  backtracking. In contrast, sequence parsers are purely functional and if one
+  parser case fails to match the following case is tested against the initial
+  sequence again.
+
+- The type of classical parsers is `'a Stream.t -> 'b`, while that of sequence
+  parsers is `'a Seq.t -> ('b * 'a Seq.t) option`. The *semantic action* in
+  classical parsers always had type `'b`. In sequence parsers semantic actions
+  have type `'b` **if the rest of the sequence is not bound** by giving a name
+  to the final pattern component. If it is, then the semantic action must have
+  type `('b * 'a Seq.t) option`.
 
 ### Quickstart
 
-**Requirements**
+**Requirements:**
 
 - `dune`
 - `ppxlib`

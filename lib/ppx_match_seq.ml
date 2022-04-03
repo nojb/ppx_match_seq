@@ -77,11 +77,16 @@ let expand_case0 p e =
       A.pexp_let ~loc:(merge_loc p.ppat_loc e.pexp_loc) Nonrecursive
         [A.value_binding ~loc:var.loc ~pat:p ~expr:(A.evar ~loc:var.loc __seq)] e
     | _ ->
-      Location.raise_errorf ~loc:p.ppat_loc "Invalid pattern"
+      Location.raise_errorf ~loc:p.ppat_loc "Invalid pattern."
   in
   aux p
 
-let expand_case0 {pc_lhs; pc_guard = _; pc_rhs} =
+let expand_case0 {pc_lhs; pc_guard; pc_rhs} =
+  begin match pc_guard with
+  | None -> ()
+  | Some {pexp_loc = loc; _} ->
+    Location.raise_errorf ~loc "Top-level guards are not allowed."
+  end;
   expand_case0 pc_lhs pc_rhs
 
 let rec expand_cases = function
@@ -112,7 +117,7 @@ let expand ~ctxt:_ e =
     A.pexp_let ~loc:e.pexp_loc Nonrecursive [A.value_binding ~loc:e.pexp_loc ~pat:(A.pvar ~loc:loc_none __seq) ~expr:e]
       (expand_cases cases)
   | _ ->
-    Location.raise_errorf ~loc:e.pexp_loc "Invalid payload"
+    Location.raise_errorf ~loc:e.pexp_loc "Invalid payload."
 
 let ppx_match_seq =
   Extension.V3.declare "seq" Extension.Context.expression

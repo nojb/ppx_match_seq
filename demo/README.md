@@ -1,5 +1,3 @@
-## Demo
-
 Here you will find a larger example ported from [*Le langage Caml*](https://caml.inria.fr/pub/distrib/books/llc.pdf),
 written by Pierre Weiss and Xavier Leroy. Namely this folder contains the parsing part of chapter 12
 (sections 12.5 and 12.8).

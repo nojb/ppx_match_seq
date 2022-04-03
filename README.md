@@ -160,7 +160,17 @@ See the [Demo.](demo/)
 
 ### The rewriting
 
-The second example above is desugared as follows:
+The example
+
+```ocaml
+# type tok = If | Then | Else | Let | In | Equal | Ident of int;;
+# let rec expr = function%seq
+    | If :: [%seq let x = expr] :: Then :: [%seq let y = expr] :: Else :: [%seq let z = expr] :: _ -> "if"
+    | Let :: Ident x :: Equal :: [%seq let x = expr] :: In :: [%seq let y = expr] :: _ -> "let";;
+val expr : tok Seq.t -> (string * (unit -> tok Seq.node)) option = <fun>
+```
+
+is desugared as follows:
 
 ```ocaml
 let rec expr __seq =

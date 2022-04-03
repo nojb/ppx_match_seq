@@ -50,6 +50,8 @@ let expand_case p e =
           ~guard:None ~rhs:e;
         A.case ~lhs:(pnone ~loc:loc_none) ~guard:None ~rhs:(enone ~loc:loc_none);
       ]
+  | Ppat_extension ({txt = "seq"; loc = _}, PStr [{pstr_desc = Pstr_eval (e', _); pstr_loc = _}]) ->
+    A.pexp_let ~loc:loc_none Nonrecursive [A.value_binding ~loc:loc_none ~pat:(A.punit ~loc:loc_none) ~expr:e'] e
   | Ppat_extension ({txt = "seq"; loc = _}, PPat (p, guard)) ->
     expand_pattern p ?guard e
   | _ ->

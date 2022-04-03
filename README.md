@@ -1,4 +1,4 @@
-## `ppx_match_seq`
+## A syntax for `Seq.t` parsers
 
 We describe the syntax and the semantics of the parsers of sequences `'a
 Seq.t`. Parsers defined with this syntax are normal functions of type `'a Seq.t
